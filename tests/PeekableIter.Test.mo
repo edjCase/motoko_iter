@@ -1,68 +1,64 @@
-import Debug "mo:base/Debug";
-import Deque "mo:base/Deque";
-import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
-
-import ActorSpec "./utils/ActorSpec";
-
 import PeekableIter "../src/PeekableIter";
+import { test } "mo:test";
 
-let {
-    assertTrue;
-    assertFalse;
-    assertAllTrue;
-    describe;
-    it;
-    skip;
-    pending;
-    run;
-} = ActorSpec;
+test(
+    "fromIter",
+    func() {
+        let vals = [1, 2, 3].vals();
+        let peekable = PeekableIter.fromIter<Nat>(vals);
 
-let success = run([
-    describe(
-        "PeekableIter",
-        [
-            it(
-                "fromIter",
-                do {
-                    let vals = [1, 2, 3].vals();
-                    let peekable = PeekableIter.fromIter<Nat>(vals);
+        assert peekable.peek() == ?1;
+        assert peekable.next() == ?1;
 
-                    assertAllTrue([
-                        peekable.peek() == ?1,
-                        peekable.next() == ?1,
+        assert peekable.peek() == ?2;
+        assert peekable.peek() == ?2;
+        assert peekable.next() == ?2;
 
-                        peekable.peek() == ?2,
-                        peekable.peek() == ?2,
-                        peekable.next() == ?2,
+        assert peekable.peek() == ?3;
+        assert peekable.next() == ?3;
 
-                        peekable.peek() == ?3,
-                        peekable.next() == ?3,
+        assert peekable.peek() == null;
+        assert peekable.next() == null;
+    },
+);
 
-                        peekable.peek() == null,
-                        peekable.next() == null,
-                    ]);
-                },
-            ),
-            it(
-                "hasNext",
-                do {
-                    // TODO
-                },
-            ),
-            it(
-                "isNext",
-                do {
+test(
+    "hasNext",
+    func() {
+        let vals = [1, 2].vals();
+        let peekable = PeekableIter.fromIter(vals);
 
-                    // TODO
-                },
-            ),
-        ],
-    ),
-]);
+        assert PeekableIter.hasNext(peekable); // true
+        let _ = peekable.next(); // consume 1
 
-if (success == false) {
-    Debug.trap("\1b[46;41mTests failed\1b[0m");
-} else {
-    Debug.print("\1b[23;42;3m Success!\1b[0m");
-};
+        assert PeekableIter.hasNext(peekable); // true
+        let _ = peekable.next(); // consume 2
+
+        assert not PeekableIter.hasNext(peekable); // false
+
+        // Test with empty iterator
+        let empty = [].vals();
+        let emptyPeekable = PeekableIter.fromIter(empty);
+        assert not PeekableIter.hasNext(emptyPeekable); // false
+    },
+);
+
+test(
+    "isNext",
+    func() {
+        let vals = [42, 100].vals();
+        let peekable = PeekableIter.fromIter(vals);
+
+        assert PeekableIter.isNext(peekable, 42, Nat.equal); // true
+        assert not PeekableIter.isNext(peekable, 100, Nat.equal); // false (next is 42)
+
+        let _ = peekable.next(); // consume 42
+        assert PeekableIter.isNext(peekable, 100, Nat.equal); // true
+
+        // Test with empty iterator
+        let empty = [].vals();
+        let emptyPeekable = PeekableIter.fromIter(empty);
+        assert not PeekableIter.isNext(emptyPeekable, 42, Nat.equal); // false
+    },
+);
