@@ -7,22 +7,19 @@ import PeekableIter "PeekableIter";
 
 module {
 
-    /// Returns an iterator that accumulates elements into arrays with a size less that or equal to the given `size`.
-    /// Will trap if `size` is 0.
-    ///
-    /// ### Example
-    /// - An example grouping a iterator of integers into arrays of size `3`:
+    /// Returns an iterator that accumulates elements into arrays with a size less than or equal to the given `size`.
+    /// Each chunk will contain exactly `chunkSize` elements except for the last chunk which may contain fewer elements.
+    /// This function will trap if `size` is 0.
     ///
     /// ```motoko
+    /// let vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].vals();
+    /// let chunkedIter = IterX.chunk(vals, 3);
     ///
-    ///     let vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].vals();
-    ///     let it = IterX.chunks(vals, 3);
-    ///
-    ///     assert it.next() == ?[1, 2, 3];
-    ///     assert it.next() == ?[4, 5, 6];
-    ///     assert it.next() == ?[7, 8, 9];
-    ///     assert it.next() == ?[10];
-    ///     assert it.next() == null;
+    /// let chunk1 = chunkedIter.next(); // ?[1, 2, 3]
+    /// let chunk2 = chunkedIter.next(); // ?[4, 5, 6]
+    /// let chunk3 = chunkedIter.next(); // ?[7, 8, 9]
+    /// let chunk4 = chunkedIter.next(); // ?[10]
+    /// let chunk5 = chunkedIter.next(); // null
     /// ```
     public func chunk<A>(iter : Iter.Iter<A>, chunkSize : Nat) : Iter.Iter<[A]> {
         if (chunkSize == 0) {
@@ -51,21 +48,22 @@ module {
         };
     };
 
-    /// Checks if two iterators are equal.
-    ///
-    /// ### Example
+    /// Checks if two iterators are equal by comparing each element using the provided equality function.
+    /// Returns `true` if both iterators contain the same sequence of elements, `false` otherwise.
+    /// The iterators are consumed during comparison.
     ///
     /// ```motoko
+    /// import Nat "mo:new-base/Nat";
     ///
-    ///     let it1 = IterX.range(1, 10);
-    ///     let it2 = IterX.range(1, 10);
+    /// let iter1 = [1, 2, 3, 4, 5].vals();
+    /// let iter2 = [1, 2, 3, 4, 5].vals();
+    /// let result = IterX.equal(iter1, iter2, Nat.equal);
+    /// // Returns: true
     ///
-    ///     assert IterX.equal(it1, it2, Nat.equal);
-    ///
-    ///     let it3 = IterX.range(1, 5);
-    ///     let it4 = IterX.range(1, 10);
-    ///
-    ///     assert not IterX.equal(it3, it4, Nat.equal);
+    /// let iter3 = [1, 2, 3].vals();
+    /// let iter4 = [1, 2, 3, 4].vals();
+    /// let result2 = IterX.equal(iter3, iter4, Nat.equal);
+    /// // Returns: false
     /// ```
     public func equal<A>(
         iter1 : Iter.Iter<A>,
@@ -88,18 +86,19 @@ module {
 
     };
 
-    /// Return the index of an element in an iterator that matches a predicate.
-    ///
-    /// ### Example
+    /// Returns the index of the first element in an iterator that matches the given predicate.
+    /// If no element matches the predicate, returns `null`.
+    /// The iterator is consumed up to and including the first matching element.
     ///
     /// ```motoko
+    /// let numbers = [1, 3, 5, 8, 9, 12].vals();
+    /// let isEven = func(x : Nat) : Bool { x % 2 == 0 };
+    /// let result = IterX.findIndex(numbers, isEven);
+    /// // Returns: ?3 (index of first even number: 8)
     ///
-    ///     let vals = [1, 2, 3, 4, 5].vals();
-    ///
-    ///     let isEven = func( x : Int ) : Bool {x % 2 == 0};
-    ///     let res = IterX.findIndex(vals, isEven);
-    ///
-    ///     assert res == ?1;
+    /// let oddNumbers = [1, 3, 5, 7].vals();
+    /// let result2 = IterX.findIndex(oddNumbers, isEven);
+    /// // Returns: null (no even numbers found)
     /// ```
     public func findIndex<A>(iter : Iter.Iter<A>, predicate : (A) -> Bool) : ?Nat {
         var i = 0;
@@ -112,19 +111,15 @@ module {
         return null;
     };
 
-    /// Returns an iterator with the indices of all the elements that match the predicate.
-    ///
-    /// ### Example
+    /// Returns an iterator containing the indices of all elements that match the given predicate.
+    /// The original iterator is fully consumed, and the returned iterator yields indices in order.
     ///
     /// ```motoko
-    ///
-    ///     let vals = [1, 2, 3, 4, 5, 6].vals();
-    ///
-    ///     let isEven = func( x : Int ) : Bool {x % 2 == 0};
-    ///     let res = IterX.findIndices(vals, isEven);
-    ///
-    ///     assert Iter.toArray(res) == [1, 3, 5];
-    ///
+    /// let numbers = [1, 2, 3, 4, 5, 6].vals();
+    /// let isEven = func(x : Nat) : Bool { x % 2 == 0 };
+    /// let indices = IterX.findIndices(numbers, isEven);
+    /// let result = Iter.toArray(indices);
+    /// // Returns: [1, 3, 5] (indices of even numbers: 2, 4, 6)
     /// ```
     public func findIndices<A>(iter : Iter.Iter<A>, predicate : (A) -> Bool) : Iter.Iter<Nat> {
         var i = 0;
@@ -144,16 +139,18 @@ module {
         };
     };
 
-    /// Returns an flattened iterator with all the values in a nested array
-    ///
-    /// ### Example
+    /// Returns a flattened iterator that yields all elements from nested arrays in sequence.
+    /// Each array in the input iterator is expanded, and its elements are yielded individually.
     ///
     /// ```motoko
+    /// let nestedArrays = [[1], [2, 3], [4, 5, 6]].vals();
+    /// let flattenedIter = IterX.flattenArray(nestedArrays);
+    /// let result = Iter.toArray(flattenedIter);
+    /// // Returns: [1, 2, 3, 4, 5, 6]
     ///
-    ///     let arr = [[1], [2, 3], [4, 5, 6]];
-    ///     let flattened = IterX.flatten(arr);
-    ///
-    ///     assert Iter.toArray(flattened) == [1, 2, 3, 4, 5, 6];
+    /// let emptyAndFilled = [[], [1, 2], []].vals();
+    /// let result2 = Iter.toArray(IterX.flattenArray(emptyAndFilled));
+    /// // Returns: [1, 2]
     /// ```
     public func flattenArray<A>(nestedArray : Iter.Iter<[A]>) : Iter.Iter<A> {
         Iter.flatten(
@@ -166,25 +163,16 @@ module {
         );
     };
 
-    /// Groups nearby elements into arrays based on result from the given function and returns them along with the result of elements in that group.
-    ///
-    /// ### Example
+    /// Groups consecutive elements into arrays based on the result of the given predicate function.
+    /// Returns an iterator of tuples where each tuple contains an array of consecutive elements
+    /// and a boolean indicating the predicate result for that group.
     ///
     /// ```motoko
-    ///
-    ///     let vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].vals();
-    ///
-    ///     let isFactorOf30 = func( x : Int ) : Bool {x % 30 == 0};
-    ///     let groups = IterX.groupBy(vals, isFactorOf30);
-    ///
-    ///     assert Iter.toArray(groups) == [
-    ///         ([1, 2, 3], true),
-    ///         ([4], false),
-    ///         ([5, 6], true),
-    ///         ([7, 8, 9], false),
-    ///         ([10], true)
-    ///     ];
-    ///
+    /// let numbers = [1, 3, 5, 2, 4, 7, 9].vals();
+    /// let isEven = func(x : Nat) : Bool { x % 2 == 0 };
+    /// let groups = IterX.groupBy(numbers, isEven);
+    /// let result = Iter.toArray(groups);
+    /// // Returns: [([1, 3, 5], false), ([2, 4], true), ([7, 9], false)]
     /// ```
     public func groupBy<A, B>(iter : Iter.Iter<A>, pred : (A) -> Bool) : Iter.Iter<([A], Bool)> {
         let groupItemList = List.empty<A>();
@@ -230,24 +218,24 @@ module {
         };
     };
 
-    /// Checks if all the elements in an iterator are sorted in ascending order
-    /// that for every element `a` ans its proceding element `b`, `a <= b`.
-    ///
-    /// Returns true if iterator is empty
-    ///
-    /// #Example
+    /// Checks if all elements in an iterator are sorted in ascending order using the provided comparison function.
+    /// Returns `true` if for every consecutive pair of elements `a` and `b`, `compare(a, b) != #greater`.
+    /// Returns `true` for empty iterators.
     ///
     /// ```motoko
-    /// import Nat "mo:base/Nat";
+    /// import Nat "mo:new-base/Nat";
     ///
-    ///     let a = [1, 2, 3, 4];
-    ///     let b = [1, 4, 2, 3];
-    ///     let c = [4, 3, 2, 1];
+    /// let ascending = [1, 2, 3, 4, 5].vals();
+    /// let result1 = IterX.isSorted(ascending, Nat.compare);
+    /// // Returns: true
     ///
-    /// assert IterX.isSorted(a.vals(), Nat.compare) == true;
-    /// assert IterX.isSorted(b.vals(), Nat.compare) == false;
-    /// assert IterX.isSorted(c.vals(), Nat.compare) == false;
+    /// let unsorted = [1, 4, 2, 3].vals();
+    /// let result2 = IterX.isSorted(unsorted, Nat.compare);
+    /// // Returns: false
     ///
+    /// let empty = [].vals();
+    /// let result3 = IterX.isSorted(empty, Nat.compare);
+    /// // Returns: true
     /// ```
     public func isSorted<A>(iter : Iter.Iter<A>, cmp : (A, A) -> Order.Order) : Bool {
         var prev = switch (iter.next()) {
@@ -265,23 +253,24 @@ module {
         true;
     };
 
-    /// Checks if all the elements in an iterator are sorted in descending order
-    ///
-    /// Returns true if iterator is empty
-    ///
-    /// #Example
+    /// Checks if all elements in an iterator are sorted in descending order using the provided comparison function.
+    /// Returns `true` if for every consecutive pair of elements `a` and `b`, `compare(a, b) != #less`.
+    /// Returns `true` for empty iterators.
     ///
     /// ```motoko
-    /// import Nat "mo:base/Nat";
+    /// import Nat "mo:new-base/Nat";
     ///
-    ///     let a = [1, 2, 3, 4];
-    ///     let b = [1, 4, 2, 3];
-    ///     let c = [4, 3, 2, 1];
+    /// let descending = [5, 4, 3, 2, 1].vals();
+    /// let result1 = IterX.isSortedDesc(descending, Nat.compare);
+    /// // Returns: true
     ///
-    /// assert IterX.isSortedDesc(a.vals(), Nat.compare) == false;
-    /// assert IterX.isSortedDesc(b.vals(), Nat.compare) == false;
-    /// assert IterX.isSortedDesc(c.vals(), Nat.compare) == true;
+    /// let ascending = [1, 2, 3, 4].vals();
+    /// let result2 = IterX.isSortedDesc(ascending, Nat.compare);
+    /// // Returns: false
     ///
+    /// let empty = [].vals();
+    /// let result3 = IterX.isSortedDesc(empty, Nat.compare);
+    /// // Returns: true
     /// ```
     public func isSortedDesc<A>(iter : Iter.Iter<A>, cmp : (A, A) -> Order.Order) : Bool {
         var prev = switch (iter.next()) {
@@ -299,41 +288,25 @@ module {
         true;
     };
 
-    /// Returns a tuple of the minimum and maximum value in an iterator.
-    /// The first element is the minimum, the second the maximum.
-    ///
-    /// A null value is returned if the iterator is empty.
-    ///
-    /// If the iterator contains only one element, then it is returned as both
-    /// the minimum and the maximum.
-    ///
-    /// ### Example
+    /// Returns a tuple containing the minimum and maximum values from an iterator.
+    /// The first element of the tuple is the minimum value, the second is the maximum value.
+    /// Returns `null` if the iterator is empty.
+    /// If the iterator contains only one element, it is returned as both minimum and maximum.
     ///
     /// ```motoko
+    /// import Nat "mo:new-base/Nat";
     ///
-    ///     let vals = [8, 4, 6, 9].vals();
-    ///     let minmax = IterX.minmax(vals);
+    /// let numbers = [8, 4, 6, 9, 2].vals();
+    /// let result = IterX.minmax(numbers, Nat.compare);
+    /// // Returns: ?(2, 9)
     ///
-    ///     assert minmax == ?(4, 9);
-    /// ```
+    /// let empty = [].vals();
+    /// let result2 = IterX.minmax(empty, Nat.compare);
+    /// // Returns: null
     ///
-    /// - minmax on an empty iterator
-    ///
-    /// ```motoko
-    ///
-    ///     let vals = [].vals();
-    ///     let minmax = IterX.minmax(vals);
-    ///
-    ///     assert minmax == null;
-    /// ```
-    /// - minmax on an iterator with one element
-    ///
-    /// ```motoko
-    ///
-    ///     let vals = [8].vals();
-    ///     let minmax = IterX.minmax(vals);
-    ///
-    ///     assert minmax == ?(8, 8);
+    /// let single = [42].vals();
+    /// let result3 = IterX.minmax(single, Nat.compare);
+    /// // Returns: ?(42, 42)
     /// ```
     public func minmax<A>(iter : Iter.Iter<A>, cmp : (A, A) -> Order.Order) : ?(A, A) {
         let (_min, _max) = switch (iter.next()) {
@@ -370,44 +343,43 @@ module {
 
     };
 
-    /// Returns the nth element of an iterator.
-    /// Consumes the first n elements of the iterator.
-    ///
-    /// ### Example
+    /// Returns the nth element of an iterator (0-indexed).
+    /// Consumes the first n elements of the iterator and returns the element at position n.
+    /// Returns `null` if the iterator has fewer than n+1 elements.
     ///
     /// ```motoko
+    /// let numbers = [10, 20, 30, 40, 50].vals();
+    /// let result = IterX.nth(numbers, 2);
+    /// // Returns: ?30 (element at index 2)
     ///
-    ///     let vals = [0, 1, 2, 3, 4, 5].vals();
-    ///     let nth = IterX.nth(vals, 3);
+    /// let shortList = [1, 2].vals();
+    /// let result2 = IterX.nth(shortList, 5);
+    /// // Returns: null (index 5 doesn't exist)
     ///
-    ///     assert nth == ?3;
+    /// let result3 = IterX.nth([100].vals(), 0);
+    /// // Returns: ?100 (first element)
     /// ```
-    ///
     public func nth<A>(iter : Iter.Iter<A>, n : Nat) : ?A {
         let skippedIter = Iter.drop<A>(iter, n);
         return skippedIter.next();
     };
 
-    /// Takes a partition function that returns `true` or `false`
-    /// for each element in the iterator.
-    /// The iterator is partitioned into a tuple of two arrays.
-    /// The first array contains the elements all elements that
-    /// returned `true` and the second array contains the elements
-    /// that returned `false`.
-    ///
-    /// If the iterator is empty, it returns a tuple of two empty arrays.
-    /// ### Example
+    /// Partitions an iterator into two arrays based on a predicate function.
+    /// Returns a tuple where the first array contains all elements for which the predicate returns `true`,
+    /// and the second array contains all elements for which the predicate returns `false`.
+    /// The relative order of elements within each partition is preserved.
     ///
     /// ```motoko
+    /// let numbers = [1, 2, 3, 4, 5, 6].vals();
+    /// let isEven = func(n : Nat) : Bool { n % 2 == 0 };
+    /// let (evenIter, oddIter) = IterX.partition(numbers, isEven);
+    /// let evens = Iter.toArray(evenIter);
+    /// let odds = Iter.toArray(oddIter);
+    /// // evens = [2, 4, 6], odds = [1, 3, 5]
     ///
-    ///     let vals = [0, 1, 2, 3, 4, 5].vals();
-    ///     let isEven = func (n: Nat) : Bool { n % 2 == 0 };
-    ///
-    ///     let (even, odd) = IterX.partition(vals, isEven);
-    ///
-    ///     assert even == [0, 2, 4];
-    ///     assert odd == [1, 3, 5];
-    ///
+    /// let empty = [].vals();
+    /// let (emptyTrue, emptyFalse) = IterX.partition(empty, isEven);
+    /// // Both iterators will be empty
     /// ```
     public func partition<A>(iter : Iter.Iter<A>, f : (A) -> Bool) : (Iter.Iter<A>, Iter.Iter<A>) {
         let firstGroup = List.empty<A>();
@@ -424,40 +396,40 @@ module {
         (List.values(firstGroup), List.values(secondGroup));
     };
 
-    /// Returns a tuple of iterators where the first element is the first n elements of the iterator, and the second element is the remaining elements.
+    /// Splits an iterator into two iterators at the specified position.
+    /// Returns a tuple where the first iterator contains the first `n` elements,
+    /// and the second iterator contains the remaining elements.
+    /// The original iterator is consumed during this operation.
     ///
-    /// ### Example
     /// ```motoko
+    /// let numbers = [1, 2, 3, 4, 5, 6].vals();
+    /// let (leftIter, rightIter) = IterX.splitAt(numbers, 3);
     ///
-    ///     let iter = [1, 2, 3, 4, 5].vals();
-    ///     let (left, right) = IterX.splitAt(iter, 3);
+    /// let left = Iter.toArray(leftIter);   // [1, 2, 3]
+    /// let right = Iter.toArray(rightIter); // [4, 5, 6]
     ///
-    ///     assert left.next() == ?1;
-    ///     assert right.next() == ?4;
-    ///
-    ///     assert left.next() == ?2;
-    ///     assert right.next() == ?5;
-    ///
-    ///     assert left.next() == ?3;
-    ///
-    ///     assert left.next() == null;
-    ///     assert right.next() == null;
+    /// let shortList = [1, 2].vals();
+    /// let (left2, right2) = IterX.splitAt(shortList, 5);
+    /// // left2 contains [1, 2], right2 is empty
     /// ```
     public func splitAt<A>(iter : Iter.Iter<A>, n : Nat) : (Iter.Iter<A>, Iter.Iter<A>) {
         var left = Iter.toArray(Iter.take(iter, n)).vals();
         (left, iter);
     };
 
-    /// Unzips an iterator of tuples into a tuple of arrays.
+    /// Unzips an iterator of tuples into a tuple of two arrays.
+    /// The first array contains all the first elements from the tuples,
+    /// and the second array contains all the second elements from the tuples.
+    /// The order of elements is preserved.
     ///
-    /// ### Example
     /// ```motoko
+    /// let pairs = [(1, 'a'), (2, 'b'), (3, 'c')].vals();
+    /// let (numbers, letters) = IterX.unzip(pairs);
+    /// // numbers = [1, 2, 3], letters = ['a', 'b', 'c']
     ///
-    ///     let iter = [(1, 'a'), (2, 'b'), (3, 'c')].vals();
-    ///     let (arr1, arr2) = IterX.unzip(iter);
-    ///
-    ///     assert arr1 == [1, 2, 3];
-    ///     assert arr2 == ['a', 'b', 'c'];
+    /// let empty = [].vals();
+    /// let (emptyNums, emptyChars) = IterX.unzip(empty);
+    /// // Both arrays will be empty: [], []
     /// ```
     public func unzip<A, B>(iter : Iter.Iter<(A, B)>) : ([A], [B]) {
         var list1 = List.empty<A>();
@@ -471,25 +443,22 @@ module {
         (List.toArray(list1), List.toArray(list2));
     };
 
-    /// Returns a peekable iterator.
-    /// The iterator has a `peek` method that returns the next value
-    /// without consuming the iterator.
+    /// Converts a regular iterator into a peekable iterator.
+    /// A peekable iterator allows you to look at the next value without consuming it
+    /// by calling the `peek()` method. This is useful when you need to examine
+    /// the next element before deciding whether to consume it.
     ///
-    /// ### Example
     /// ```motoko
+    /// let numbers = [10, 20, 30].vals();
+    /// let peekableIter = IterX.toPeekable(numbers);
     ///
-    ///     let vals = Iter.fromArray([1, 2]);
-    ///     let peekIter = IterX.toPeekable(vals);
-    ///
-    ///     assert peekIter.peek() == ?1;
-    ///     assert peekIter.next() == ?1;
-    ///
-    ///     assert peekIter.peek() == ?2;
-    ///     assert peekIter.peek() == ?2;
-    ///     assert peekIter.next() == ?2;
-    ///
-    ///     assert peekIter.peek() == null;
-    ///     assert peekIter.next() == null;
+    /// let nextValue = peekableIter.peek(); // ?10 (doesn't consume)
+    /// let nextValue2 = peekableIter.peek(); // ?10 (still doesn't consume)
+    /// let consumed = peekableIter.next();   // ?10 (consumes the value)
+    /// let afterPeek = peekableIter.peek();  // ?20 (next value)
+    /// let consumed2 = peekableIter.next();  // ?20
+    /// let consumed3 = peekableIter.next();  // ?30
+    /// let end = peekableIter.peek();        // null (no more values)
     /// ```
     public func toPeekable<T>(iter : Iter.Iter<T>) : PeekableIter.PeekableIter<T> {
         PeekableIter.fromIter<T>(iter);

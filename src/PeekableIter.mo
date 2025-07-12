@@ -1,27 +1,40 @@
 import Iter "mo:base/Iter";
 
 module {
-    /// Peekable Iterator Type.
+    /// Represents an iterator that allows peeking at the next element without consuming it.
+    /// A PeekableIter extends the standard Iter interface with a `peek` method that returns
+    /// the next value without advancing the iterator position.
+    ///
+    /// ```motoko
+    /// let numbers = [1, 2, 3].vals();
+    /// let peekableIter : PeekableIter<Nat> = PeekableIter.fromIter(numbers);
+    /// ```
     public type PeekableIter<T> = Iter.Iter<T> and {
         peek : () -> ?T;
     };
 
-    /// Creates a `PeekableIter` from an existing `Iter`.
-    /// The `peek` method returns the next value without advancing the peekable iterator,
-    /// NOTE: the underlying iterator is advanced when `peek` is called by 1 if not already peeked.
+    /// Creates a PeekableIter from an existing iterator.
+    /// The returned peekable iterator allows you to examine the next value using `peek()`
+    /// without consuming it, which is useful for lookahead parsing or conditional processing.
     ///
-    /// ### Example
+    /// The `peek()` method caches the next value internally, so subsequent calls to `peek()`
+    /// return the same value without advancing the underlying iterator. The cached value
+    /// is consumed when `next()` is called.
+    ///
     /// ```motoko
-    /// let iter = Iter.fromArray([1, 2, 3]);
-    /// let peekable = PeekableIter.fromIter(iter);
-    /// assert(peekable.peek() == ?1); // Peek the first element
-    /// assert(peekable.next() == ?1); // Get the first element
-    /// assert(peekable.peek() == ?2); // Peek the second element
-    /// assert(peekable.next() == ?2); // Get the second element
-    /// assert(peekable.peek() == ?3); // Peek the third element
-    /// assert(peekable.next() == ?3); // Get the third element
-    /// assert(peekable.peek() == null); // No more elements to peek
-    /// assert(peekable.next() == null); // No more elements to get
+    /// let numbers = [10, 20, 30].vals();
+    /// let peekable = PeekableIter.fromIter(numbers);
+    ///
+    /// let peeked1 = peekable.peek(); // ?10 (caches the value)
+    /// let peeked2 = peekable.peek(); // ?10 (returns cached value)
+    /// let consumed1 = peekable.next(); // ?10 (consumes cached value)
+    ///
+    /// let peeked3 = peekable.peek(); // ?20 (caches next value)
+    /// let consumed2 = peekable.next(); // ?20 (consumes cached value)
+    /// let consumed3 = peekable.next(); // ?30 (no peek, direct consumption)
+    ///
+    /// let end = peekable.peek(); // null (no more elements)
+    /// let endNext = peekable.next(); // null (no more elements)
     /// ```
     public func fromIter<T>(iter : Iter.Iter<T>) : PeekableIter<T> {
         var peekItem : ?T = null;
@@ -42,31 +55,39 @@ module {
 
             public func next() : ?T {
                 switch (peekItem) {
-                    case (?val) ?val; // If we have a peeked value, return it
+                    case (?val) {
+                        // If we have a peeked value, return it and clear the cache
+                        peekItem := null;
+                        ?val;
+                    };
                     case (null) iter.next(); // Otherwise, just call next on the underlying iterator
                 };
             };
         };
     };
 
-    /// Checks if the iterator has a next value without advancing it.
-    /// NOTE: the underlying iterator is advanced when `peek` is called by 1 if not already peeked.
+    /// Checks if the peekable iterator has more elements available.
+    /// Returns `true` if there are more elements, `false` if the iterator is exhausted.
+    /// This method uses `peek()` internally, which may advance the underlying iterator
+    /// by one position if no value is currently cached.
     ///
-    /// ### Example
     /// ```motoko
-    /// let iter = PeekableIter.fromIter(Iter.fromArray([1, 2, 3]));
-    /// assert(PeekableIter.hasNext(iter)); // true
-    /// assert(iter.peek() == ?1); // Peek the first element
-    /// assert(iter.next() == ?1); // Get the first element
-    /// assert(PeekableIter.hasNext(iter)); // true
-    /// assert(iter.peek() == ?2); // Peek the second element
-    /// assert(iter.next() == ?2); // Get the second element
-    /// assert(PeekableIter.hasNext(iter)); // true
-    /// assert(iter.peek() == ?3); // Peek the third element
-    /// assert(iter.next() == ?3); // Get the third element
-    /// assert(not PeekableIter.hasNext(iter)); // false, no more elements
-    /// assert(iter.peek() == null); // No more elements to peek
-    /// assert(iter.next() == null); // No more elements to get
+    /// let numbers = [1, 2].vals();
+    /// let peekable = PeekableIter.fromIter(numbers);
+    ///
+    /// let hasMore1 = PeekableIter.hasNext(peekable); // true
+    /// let first = peekable.next(); // ?1
+    ///
+    /// let hasMore2 = PeekableIter.hasNext(peekable); // true
+    /// let second = peekable.next(); // ?2
+    ///
+    /// let hasMore3 = PeekableIter.hasNext(peekable); // false
+    /// let end = peekable.next(); // null
+    ///
+    /// // Example with empty iterator
+    /// let empty = [].vals();
+    /// let emptyPeekable = PeekableIter.fromIter(empty);
+    /// let hasAny = PeekableIter.hasNext(emptyPeekable); // false
     /// ```
     public func hasNext<T>(iter : PeekableIter<T>) : Bool {
         switch (iter.peek()) {
@@ -75,11 +96,34 @@ module {
         };
     };
 
-    /// Checks if the next value in the iterator is equal to the given value
-    /// using the provided equality function.
+    /// Checks if the next value in the peekable iterator equals the given value using the provided equality function.
+    /// Returns `true` if the next value exists and equals the given value, `false` otherwise.
+    /// This method does not advance the peekable iterator position, but may advance the underlying
+    /// iterator by one position if no value is currently cached.
     ///
-    /// This method does not advance the peekable iterator.
-    /// NOTE: the underlying iterator is advanced when `peek` is called by 1 if not already peeked.
+    /// ```motoko
+    /// import Nat "mo:base/Nat";
+    ///
+    /// let numbers = [42, 100, 200].vals();
+    /// let peekable = PeekableIter.fromIter(numbers);
+    ///
+    /// let isFortyTwo = PeekableIter.isNext(peekable, 42, Nat.equal); // true
+    /// let isHundred = PeekableIter.isNext(peekable, 100, Nat.equal); // false (next is 42)
+    ///
+    /// let consumed = peekable.next(); // ?42 (consume the peeked value)
+    /// let isHundredNow = PeekableIter.isNext(peekable, 100, Nat.equal); // true
+    ///
+    /// // Example with empty iterator
+    /// let empty = [].vals();
+    /// let emptyPeekable = PeekableIter.fromIter(empty);
+    /// let isAnything = PeekableIter.isNext(emptyPeekable, 42, Nat.equal); // false
+    ///
+    /// // Example with custom equality
+    /// let texts = ["hello", "world"].vals();
+    /// let textPeekable = PeekableIter.fromIter(texts);
+    /// let isHello = PeekableIter.isNext(textPeekable, "hello", Text.equal); // true
+    /// let isHELLO = PeekableIter.isNext(textPeekable, "HELLO", Text.equal); // false (case sensitive)
+    /// ```
     public func isNext<T>(iter : PeekableIter<T>, val : T, isEq : (T, T) -> Bool) : Bool {
         switch (iter.peek()) {
             case (?v) { isEq(v, val) };
