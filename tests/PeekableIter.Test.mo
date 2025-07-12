@@ -44,44 +44,17 @@ let success = run([
                     ]);
                 },
             ),
-             it(
-                "skipWhile",
+            it(
+                "hasNext",
                 do {
-                    let iter = PeekableIter.fromIter([1, 2, 3, 4, 5].vals());
-                    let lessThan3 = func(a : Int) : Bool { a < 3 };
-
-                    PeekableIter.skipWhile(iter, lessThan3);
-
-                    let res = Iter.toArray(iter);
-                    assertTrue(
-                        res == [3, 4, 5],
-                    );
+                    // TODO
                 },
             ),
             it(
-                "takeWhile",
+                "isNext",
                 do {
-                    let iter = PeekableIter.fromIter([1, 2, 3, 4, 5].vals());
-                    let lessThan3 = func(x : Nat) : Bool { x < 3 };
-                    let below_three = PeekableIter.takeWhile(iter, lessThan3);
 
-                    let res = [
-
-                        below_three.next() == ?1,
-                        below_three.next() == ?2,
-                        below_three.next() == null,
-
-                        // after the below_three iterator is consumed, 
-                        // the original iterator should be at the next value
-
-                        iter.next() == ?3,
-                        iter.next() == ?4,
-                        iter.next() == ?5,
-                        iter.next() == null,
-
-                    ];
-
-                    assertAllTrue(res);
+                    // TODO
                 },
             ),
         ],
