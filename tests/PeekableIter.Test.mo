@@ -1,4 +1,4 @@
-import Nat "mo:base/Nat";
+import Nat "mo:new-base/Nat";
 import PeekableIter "../src/PeekableIter";
 import { test } "mo:test";
 

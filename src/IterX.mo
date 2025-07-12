@@ -174,7 +174,7 @@ module {
     /// let result = Iter.toArray(groups);
     /// // Returns: [([1, 3, 5], false), ([2, 4], true), ([7, 9], false)]
     /// ```
-    public func groupBy<A, B>(iter : Iter.Iter<A>, pred : (A) -> Bool) : Iter.Iter<([A], Bool)> {
+    public func groupBy<A>(iter : Iter.Iter<A>, pred : (A) -> Bool) : Iter.Iter<([A], Bool)> {
         let groupItemList = List.empty<A>();
 
         func nextGroup() : ?([A], Bool) {
@@ -185,7 +185,9 @@ module {
                         return nextGroup();
                     };
 
-                    if (pred(List.get(groupItemList, 0)) == pred(val)) {
+                    let firstItem = List.get(groupItemList, 0);
+
+                    if (pred(firstItem) == pred(val)) {
                         List.add(groupItemList, val);
                         nextGroup();
                     } else {
@@ -413,7 +415,7 @@ module {
     /// // left2 contains [1, 2], right2 is empty
     /// ```
     public func splitAt<A>(iter : Iter.Iter<A>, n : Nat) : (Iter.Iter<A>, Iter.Iter<A>) {
-        var left = Iter.toArray(Iter.take(iter, n)).vals();
+        let left = Iter.toArray(Iter.take(iter, n)).vals();
         (left, iter);
     };
 

@@ -1,4 +1,4 @@
-import Iter "mo:base/Iter";
+import Iter "mo:new-base/Iter";
 
 module {
     /// Represents an iterator that allows peeking at the next element without consuming it.
