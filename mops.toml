@@ -1,9 +1,10 @@
-[dependencies]
-base = "0.10.4"
-
 [package]
-name = "itertools"
-version = "0.2.1"
-description = "A library with utility functions and data types for creating efficient iterators in Motoko."
-repository = "https://github.com/NatLabs/Itertools"
+name = "xtended-iter"
+version = "0.0.1"
+description = "A library to extend the functionality of the base Iter"
+repository = "https://github.com/edjCase/motoko_iter"
+keywords = ["iter", "iterator", "array"]
 license = "MIT"
+
+[dependencies]
+new-base = "0.4.0"

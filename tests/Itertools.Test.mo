@@ -1,35 +1,15 @@
-import Buffer "mo:base/Buffer";
-import Char "mo:base/Char";
-import Debug "mo:base/Debug";
-import Deque "mo:base/Deque";
-import Iter "mo:base/Iter";
-import Nat "mo:base/Nat";
-import Nat8 "mo:base/Nat8";
-import Nat32 "mo:base/Nat32";
-import Int "mo:base/Int";
-import Hash "mo:base/Hash";
-import Float "mo:base/Float";
-import Func "mo:base/Func";
-import Text "mo:base/Text";
-import Trie "mo:base/Trie";
-
-import ActorSpec "./utils/ActorSpec";
-
-import RevIter "../src/RevIter";
+import Char "mo:new-base/Char";
+import Debug "mo:new-base/Debug";
+import Iter "mo:new-base/Iter";
+import Nat "mo:new-base/Nat";
+import Nat8 "mo:new-base/Nat8";
+import Nat32 "mo:new-base/Nat32";
+import Int "mo:new-base/Int";
+import Float "mo:new-base/Float";
+import Func "mo:new-base/Func";
+import Text "mo:new-base/Text";
 import Itertools "../src/Iter";
 import PeekableIter "../src/PeekableIter";
-import DequeUtils "../src/Utils/Deque";
-
-let {
-    assertTrue;
-    assertFalse;
-    assertAllTrue;
-    describe;
-    it;
-    skip;
-    pending;
-    run;
-} = ActorSpec;
 
 let success = run([
     describe(
@@ -152,7 +132,7 @@ let success = run([
                     let motoko = Itertools.toText(iter);
 
                     assertTrue(
-                        motoko == "motoko",
+                        motoko == "motoko"
                     );
                 },
             ),
@@ -326,7 +306,7 @@ let success = run([
                             (5, 'x'),
                             (5, 'y'),
                             (5, 'z'),
-                        ],
+                        ]
                     );
                 },
             ),
@@ -394,7 +374,7 @@ let success = run([
                                     [2, 3],
                                     [2, 4],
                                     [3, 4],
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -492,7 +472,7 @@ let success = run([
                                     [6, 7, 9],
                                     [6, 8, 9],
                                     [7, 8, 9],
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -504,7 +484,7 @@ let success = run([
 
                             let res = Iter.toArray(it);
                             assertTrue(
-                                res == [[1, 2, 3, 4, 5]],
+                                res == [[1, 2, 3, 4, 5]]
                             );
                         },
                     ),
@@ -534,7 +514,7 @@ let success = run([
                                     [3],
                                     [4],
                                     [5],
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -564,7 +544,7 @@ let success = run([
                             ("k", 1),
                             ("t", 1),
                             ("m", 1),
-                        ],
+                        ]
                     );
                 },
             ),
@@ -625,7 +605,7 @@ let success = run([
                             let it2 = Iter.range(1, 5);
 
                             assertTrue(
-                                Itertools.equal(it1, it2, Nat.equal),
+                                Itertools.equal(it1, it2, Nat.equal)
                             );
                         },
                     ),
@@ -637,7 +617,7 @@ let success = run([
                             let it2 = Iter.range(1, 10);
 
                             assertFalse(
-                                Itertools.equal(it1, it2, Nat.equal),
+                                Itertools.equal(it1, it2, Nat.equal)
                             );
                         },
                     ),
@@ -747,7 +727,7 @@ let success = run([
                             ([5, 6], true),
                             ([7, 8, 9], false),
                             ([10], true),
-                        ],
+                        ]
                     );
                 },
             ),
@@ -760,7 +740,7 @@ let success = run([
                     let printIfEven = func(n : Nat) {
                         if (n % 2 == 0) {
                             debugRes.add(
-                                "This value [ " # debug_show n # " ] is even.",
+                                "This value [ " # debug_show n # " ] is even."
                             );
                         };
                     };
@@ -808,7 +788,7 @@ let success = run([
                     let iter = Itertools.intersperse(vals, 10);
 
                     assertTrue(
-                        Iter.toArray(iter) == [1, 10, 2, 10, 3],
+                        Iter.toArray(iter) == [1, 10, 2, 10, 3]
                     );
                 },
             ),
@@ -889,8 +869,8 @@ let success = run([
                     let natToChar = func(x : Nat) : Text {
                         Char.toText(
                             Char.fromNat32(
-                                Nat32.fromNat(x) + 96,
-                            ),
+                                Nat32.fromNat(x) + 96
+                            )
                         );
                     };
 
@@ -1019,7 +999,7 @@ let success = run([
                             let res = Iter.toArray(merged);
 
                             assertTrue(
-                                res == [5, 2, 3, 8, 4, 1],
+                                res == [5, 2, 3, 8, 4, 1]
                             );
                         },
                     ),
@@ -1033,7 +1013,7 @@ let success = run([
                             let res = Iter.toArray(merged);
 
                             assertTrue(
-                                res == [1, 3, 4, 5, 6, 7],
+                                res == [1, 3, 4, 5, 6, 7]
                             );
                         },
                     ),
@@ -1053,7 +1033,7 @@ let success = run([
                             let res = Iter.toArray(merged);
 
                             assertTrue(
-                                res == [2, 1, 5, 2, 3, 6, 8, 4, 1],
+                                res == [2, 1, 5, 2, 3, 6, 8, 4, 1]
                             );
                         },
                     ),
@@ -1068,7 +1048,7 @@ let success = run([
                             let res = Iter.toArray(merged);
 
                             assertTrue(
-                                res == [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                res == [1, 2, 3, 4, 5, 6, 7, 8, 9]
                             );
                         },
                     ),
@@ -1089,7 +1069,7 @@ let success = run([
                             let res = Iter.toArray(merged);
 
                             assertTrue(
-                                res == [1, 5, 2, 3, 7, 8, 4, 1, 9, 12, 6, 14, 13, 15, 11],
+                                res == [1, 5, 2, 3, 7, 8, 4, 1, 9, 12, 6, 14, 13, 15, 11]
                             )
 
                         },
@@ -1106,7 +1086,7 @@ let success = run([
                     let res = Iter.toArray(iter);
 
                     assertTrue(
-                        res == [('a', 4), ('b', 3), ('c', 2), ('d', 1)],
+                        res == [('a', 4), ('b', 3), ('c', 2), ('d', 1)]
                     );
                 },
             ),
@@ -1121,7 +1101,7 @@ let success = run([
                             let it2 = Iter.range(1, 5);
 
                             assertFalse(
-                                Itertools.notEqual(it1, it2, Nat.equal),
+                                Itertools.notEqual(it1, it2, Nat.equal)
                             );
                         },
                     ),
@@ -1133,7 +1113,7 @@ let success = run([
                             let it2 = Iter.range(1, 10);
 
                             assertTrue(
-                                Itertools.notEqual(it1, it2, Nat.equal),
+                                Itertools.notEqual(it1, it2, Nat.equal)
                             );
                         },
                     ),
@@ -1167,7 +1147,7 @@ let success = run([
                     let padded = Itertools.pad(vals, 6, 0);
 
                     assertTrue(
-                        Iter.toArray(padded) == [1, 2, 3, 0, 0, 0],
+                        Iter.toArray(padded) == [1, 2, 3, 0, 0, 0]
                     );
                 },
             ),
@@ -1181,7 +1161,7 @@ let success = run([
                     let padded = Itertools.padWithFn(vals, 6, incrementIndex);
 
                     assertTrue(
-                        Iter.toArray(padded) == [1, 2, 3, 4, 5, 6],
+                        Iter.toArray(padded) == [1, 2, 3, 4, 5, 6]
                     );
                 },
             ),
@@ -1266,7 +1246,7 @@ let success = run([
                                     [2, 3, 1],
                                     [3, 1, 2],
                                     [3, 2, 1],
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -1400,7 +1380,7 @@ let success = run([
                                     [5, 4, 2, 3, 1],
                                     [5, 4, 3, 1, 2],
                                     [5, 4, 3, 2, 1],
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -1414,7 +1394,7 @@ let success = run([
                     let it2 = Itertools.prepend(0, it1);
 
                     assertTrue(
-                        Iter.toArray(it2) == [0, 1, 2, 3],
+                        Iter.toArray(it2) == [0, 1, 2, 3]
                     );
                 },
             ),
@@ -1504,7 +1484,7 @@ let success = run([
 
                     let res = Iter.toArray(skippedIter);
                     assertTrue(
-                        res == [3, 4, 5],
+                        res == [3, 4, 5]
                     );
                 },
             ),
@@ -1626,7 +1606,7 @@ let success = run([
                             256,
                             65_536,
                             4_294_967_296,
-                        ],
+                        ]
                     );
                 },
             ),
@@ -1657,7 +1637,7 @@ let success = run([
                     ]);
                 },
             ),
-            
+
             it(
                 "tuples",
                 do {
@@ -1732,7 +1712,7 @@ let success = run([
                             (2, false),
                             (3, true),
                             (3, false),
-                        ],
+                        ]
                     );
                 },
             ),
@@ -1826,7 +1806,7 @@ let success = run([
                                     #both(3, 'c'),
                                     #left(4),
                                     #left(5),
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -1847,7 +1827,7 @@ let success = run([
                                     #both(3, 'c'),
                                     #right('d'),
                                     #right('e'),
-                                ],
+                                ]
                             );
                         },
                     ),
@@ -1861,7 +1841,7 @@ let success = run([
                     let slicedIter = Itertools.fromArraySlice(arr, 2, arr.size());
 
                     assertTrue(
-                        Iter.toArray(slicedIter) == [3, 4, 5],
+                        Iter.toArray(slicedIter) == [3, 4, 5]
                     );
                 },
             ),
